@@ -20,16 +20,29 @@ pipeline {
                     currentBuildResult = currentBuild.result
                     if (currentBuildResult == 'SUCCESS') {
                         echo 'Build was successful.'
-                        // You can add further actions here if needed
                     } else {
-                        echo 'Build failed.'
-                        // You can add error handling or notifications here
+                        error 'Build failed.'
                     }
                 }
             }
         }
 
-        // Add more stages for deployment or other actions as needed
+        stage('Deploy to Ansible Server') {
+            steps {
+                script {
+                    def server = getSSHServer("Ansible Server") // Use the name you configured in Jenkins
+                    sshPublisher(publishers: [sshPublisherConfig(
+                        transfers: [sshTransfer(
+                            execCommand: "scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o CheckHostIP=no -o PreferredAuthentications=publickey -o PasswordAuthentication=no",
+                            execTimeout: 120000, // Adjust as needed
+                            from: "target/*", // Source files to copy, change this to match your artifacts location
+                            remoteDirectory: "/opt", // Destination directory on AWS instance is /opt
+                        )],
+                        serverName: server.name,
+                    )])
+                }
+            }
+        }
     }
 
     post {
@@ -38,7 +51,6 @@ pipeline {
         }
         failure {
             echo 'Pipeline failed.'
-            // You can add error handling or notifications here
         }
     }
 }
