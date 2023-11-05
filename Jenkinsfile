@@ -17,8 +17,7 @@ pipeline {
         stage('Verify Build') {
             steps {
                 script {
-                    currentBuildResult = currentBuild.result
-                    if (currentBuildResult == 'SUCCESS') {
+                    if (currentBuild.resultIsBetterOrEqualTo('SUCCESS')) {
                         echo 'Build was successful.'
                     } else {
                         error 'Build failed.'
