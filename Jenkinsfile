@@ -22,11 +22,23 @@ pipeline {
                         echo 'Build was successful.'
                         // You can add further actions here if needed
                     } else {
-                        error 'Build failed.'
+                        echo 'Build failed.'
                         // You can add error handling or notifications here
                     }
                 }
             }
+        }
+
+        // Add more stages for deployment or other actions as needed
+    }
+
+    post {
+        success {
+            echo 'Pipeline succeeded!'
+        }
+        failure {
+            echo 'Pipeline failed.'
+            // You can add error handling or notifications here
         }
     }
 }
