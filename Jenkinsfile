@@ -29,11 +29,4 @@ pipeline {
             }
         }
     }
-
-    post {
-        always {
-            // This block will run regardless of the build result
-            echo 'This stage runs always, you can perform cleanup tasks here.'
-        }
-    }
 }
