@@ -30,20 +30,25 @@ pipeline {
         stage('Deploy to Ansible Server') {
             steps {
                 script {
-                    def sshServer = 'YourSSHServerConfiguration'  // Replace with your SSH server name from Jenkins
-                    sshPublisher(publishers: [
-                        sshPublisherConfig(
-                            transfers: [
-                                sshTransfer(
-                                    execCommand: "scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o CheckHostIP=no -o PreferredAuthentications=publickey -o PasswordAuthentication=no",
-                                    execTimeout: 120000, // Adjust as needed
-                                    sourceFiles: 'target/*.jar', // Source files to copy, change this to match your artifacts location
-                                    remoteDirectory: '/opt', // Destination directory on your Ansible server
-                                )
-                            ],
-                            serverName: sshServer
-                        )
-                    ])
+                    def sshServer = 'ansible'  // Replace with your SSH server name from Jenkins
+                    def sourceFiles = 'target/*.jar'  // Source files to copy, change this to match your artifacts location
+                    def remoteDirectory = '/opt'  // Destination directory on your Ansible server
+
+                    sshPublisher(
+                        publishers: [
+                            sshPublisherConfig(
+                                configName: sshServer,
+                                transfers: [
+                                    sshTransfer(
+                                        execCommand: "scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o CheckHostIP=no -o PreferredAuthentications=publickey -o PasswordAuthentication=no",
+                                        execTimeout: 120000, // Adjust as needed
+                                        sourceFiles: sourceFiles,
+                                        remoteDirectory: remoteDirectory,
+                                    )
+                                ]
+                            )
+                        ]
+                    )
                 }
             }
         }
