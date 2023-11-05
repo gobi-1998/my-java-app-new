@@ -31,20 +31,27 @@ pipeline {
         stage('Deploy to Ansible Server') {
             steps {
                 script {
-                    def sshServer = 'ansible' // Replace with your SSH server name from Jenkins
-                    sshPublisher(publishers: [
-                        sshPublisherConfig(
-                            transfers: [
-                                sshTransfer(
-                                    execCommand: "scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o CheckHostIP=no -o PreferredAuthentications=publickey -o PasswordAuthentication=no",
-                                    execTimeout: 120000, // Adjust as needed
-                                    sourceFiles: 'target/*.jar', // Source files to copy, change this to match your artifacts location
-                                    remoteDirectory: '/opt', // Destination directory on your Ansible server
-                                )
-                            ],
-                            serverName: sshServer
-                        )
-                    ])
+                    def sshServer = [:] // Define the SSH server configuration
+                    sshServer['$class'] = 'jenkins.plugins.publish_over_ssh.BapSshPublisherPlugin'
+                    sshServer['plugin'] = 'publish-over-ssh@latest'
+
+                    def transfers = [
+                        [$class: 'jenkins.plugins.publish_over_ssh.BapSshTransfer',
+                         remoteDirectory: '/opt', // Destination directory on your Ansible server
+                         sourceFiles: 'target/*.jar', // Source files to copy, change this to match your artifacts location
+                         removePrefix: 'target/',
+                         remoteDirectorySDF: false,
+                         flatten: true,
+                         cleanRemote: false,
+                         noDefaultExcludes: false,
+                         makeEmptyDirs: false,
+                         patternSeparator: '[, ]+']
+                    ]
+
+                    sshServer['transfers'] = transfers
+
+                    // Publish over SSH
+                    step([$class: 'BapSshPublisher', configName: 'your-ssh-config', transfers: transfers])
                 }
             }
         }
