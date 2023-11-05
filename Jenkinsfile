@@ -1,39 +1,39 @@
 pipeline {
     agent any
 
-    parameters {
-        string(name: 'webhookToken', defaultValue: '', description: 'GitHub webhook token')
-    }
-
-    pipeline {
-    agent any
-    parameters {
-        string(name: 'webhookToken', defaultValue: '', description: 'GitHub webhook token')
-    }
     stages {
         stage('Checkout') {
             steps {
-                script {
-                    def receivedToken = currentBuild.rawBuild.getCause(hudson.model.Cause$UpstreamCause).getUpstreamBuild().getAction(hudson.model.ParametersAction).getParameter('webhookToken').getValue()
-                    def configuredToken = params.webhookToken
-
-                    if (receivedToken == configuredToken) {
-                        echo 'Webhook token is valid. Starting the build.'
-                        // Add your build steps here
-                    } else {
-                        error('Webhook token is invalid. Access denied.')
-                    }
-                }
+                checkout scm
             }
         }
-    }
-}
-
 
         stage('Build') {
             steps {
                 sh 'mvn clean package'
             }
+        }
+
+        stage('Verify Build') {
+            steps {
+                script {
+                    currentBuildResult = currentBuild.result
+                    if (currentBuildResult == 'SUCCESS') {
+                        echo 'Build was successful.'
+                        // You can add further actions here if needed
+                    } else {
+                        error 'Build failed.'
+                        // You can add error handling or notifications here
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            // This block will run regardless of the build result
+            echo 'This stage runs always, you can perform cleanup tasks here.'
         }
     }
 }
